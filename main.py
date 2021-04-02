@@ -1,38 +1,47 @@
 import random
 
+
 class Individual:
     size = None
     map = None
+
     def __init__(self, string=None):
         if string is None:
             self.string = self.setRandomString()
         else:
             self.string = string
         self.fit = self.computeFitness()
+
+    def __repr__(self):
+        rep = 'string = ' + self.string + ' fitness = ' + str(self.fit)
+        return rep
+
     def computeFitness(self):
         d = 0
         for i in range(Individual.size):
             start = int(self.string[i])
             end = int(self.string[i+1])
             distance = Individual.map[start][end]
-            if  distance == float("inf"):
+            if distance == float("inf"):
                 d = float("inf")
                 break
             d += distance
         return d
 
-    def setRandomString(self):
-        list = []
+    @staticmethod
+    def setRandomString():
+        lst = []
         string = ""
         for i in range(Individual.size):
             while 1:
                 rand = random.randrange(0, Individual.size)
-                if rand not in list:
+                if rand not in lst:
                     string = string + str(rand)
-                    list.append(rand)
+                    lst.append(rand)
                     break
         string = string + string[0]
         return string
+
     @staticmethod
     def partiallyMappedCrossover(individual1, individual2):
         i = random.randrange(0, Individual.size+1)
@@ -48,7 +57,6 @@ class Individual:
         for k in range(i, j):
             map1to2[individual1.string[k]] = individual2.string[k]
             map2to1[individual2.string[k]] = individual1.string[k]
-        'child 1 is now getting complete'
         child1half = ""
         for k in range(0, i):
             temp = individual2.string[k]
@@ -79,14 +87,14 @@ class Individual:
         return finalChild
 
     def muteWithSmallProb(self, prob):
-        rand = random.uniform(0,1)
+        rand = random.uniform(0, 1)
         if rand <= prob:
             ij = random.sample(range(0, Individual.size), 2)
             i = ij[0]
             j = ij[1]
             self.string = swapElements(i, j, self.string)
             if i == 0 or j == 0:
-                 self.string = self.string[0: Individual.size] + self.string[0]
+                self.string = self.string[0: Individual.size] + self.string[0]
 
 
 class Population:
@@ -98,13 +106,19 @@ class Population:
             for i in range(Population.size):
                 self.individuals.append(Individual())
 
+    def __repr__(self):
+        rep = ''
+        for ind in self.individuals:
+            rep = rep + "\n" + repr(ind)
+        return rep
+
     def pickWithWeights(self):
         lst = []
         weights = []
         for ind in self.individuals:
             lst.append(ind)
-            weights.append(ind.fit)
-        rands = random.choices(lst, weights, 2)
+            weights.append(1 / ind.fit)
+        rands = random.choices(population=lst, weights=weights, k=2)
         return rands[0], rands[1]
 
     def addIndividual(self, individual):
@@ -118,11 +132,15 @@ class Population:
                 best = individual.fit
         return bestInd
 
-    def isFit(self, fitEnough):
-        for individual in self.individuals:
-            if individual.fit <= fitEnough:
-                return True
-        return False
+    def overall(self):
+        sum = 0
+        for ind in self.individuals:
+            if ind.fit == float("inf"):
+                return float("inf")
+            sum += ind.fit
+        return sum / len(self.individuals)
+
+
 
 def swapElements(i, j, string):
     strlist = list(string)
@@ -131,28 +149,56 @@ def swapElements(i, j, string):
     return stringnew
 
 
-def geneticAlgorithm(map, initialPopulation = None, iterations = 100, fitEnough = 20, populationSize = 4, muteProb= 0.1):
+def print2dlst(lst):
+    for xs in lst:
+        print(" ".join(map(str, xs)))
+
+
+def geneticAlgorithm(mapp, initialPopulation=None, iterations=100, populationSize=4, muteProb=0.05):
     i = 0
-    individualSize = len(map)
+    individualSize = len(mapp)
     Population.size = populationSize
     Individual.size = individualSize
-    Individual.map = map
+    Individual.map = mapp
+    print("genetic algorithm is executed")
+    print("population size = ", populationSize)
+    print("individual length/ number of cities = ", individualSize)
+    # print2dlst(mapp)
+    print("--------------------------")
     if initialPopulation is None:
         initialPopulation = Population(False)
     currentPopulation = initialPopulation
-    while i < iterations and initialPopulation.isFit(fitEnough) is False:
-        print("generic algorithm ", str(i) + "th iteration" )
+    while i < iterations:
+        print("generic algorithm ", str(i+1) + "th iteration" )
+        print("current population : ")
+        print(repr(currentPopulation))
+        print("--------------------------")
         newPopulation = Population(True)
-        for i in range(populationSize):
+        for k in range(populationSize):
             x, y = currentPopulation.pickWithWeights()
+            print("x,y picked for " + str(k+1) + "th reproduction:")
+            print(repr(x) +"    " +repr(y))
             child = Individual.partiallyMappedCrossover(x, y)
+            print("child after partially mapped crossover:")
+            print(repr(child))
             child.muteWithSmallProb(muteProb)
+            print("child after mutation with probability of " + str(muteProb))
+            print(repr(child))
             newPopulation.addIndividual(child)
+        print("next population generated")
+        print("--------------------------")
+        if currentPopulation.overall() <= newPopulation.overall():
+            break
         currentPopulation = newPopulation
+        i += 1
+    print("the best individual in the final population = ")
+    print(repr(currentPopulation.bestIndividual()))
     return(currentPopulation.bestIndividual())
 
 
-map = [[0, 2, 3],
-       [2,0, 0],
-       [100,1,0]]
-geneticAlgorithm(map=map)
+map = [ [ 0, 2, float("inf"), 12, 5 ],
+                      [ 2, 0, 4, 8, float("inf") ],
+                      [ float("inf"), 4, 0, 3, 3 ],
+                      [ 12, 8, 3, 0, 10 ],
+                      [ 5, float("inf"), 3, 10, 0 ] ]
+geneticAlgorithm(mapp=map)
