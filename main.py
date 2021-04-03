@@ -2,6 +2,7 @@ import random
 
 
 class Individual:
+    'defines an individual in a population'
     size = None
     map = None
 
@@ -17,6 +18,7 @@ class Individual:
         return rep
 
     def computeFitness(self):
+        'returns the disdance of a path which is the fitness of an individual O(n)'
         d = 0
         for i in range(Individual.size):
             start = int(self.string[i])
@@ -30,6 +32,7 @@ class Individual:
 
     @staticmethod
     def setRandomString():
+        'returns a random path in form of a string O(n)'
         lst = []
         string = ""
         for i in range(Individual.size):
@@ -44,6 +47,7 @@ class Individual:
 
     @staticmethod
     def partiallyMappedCrossover(individual1, individual2):
+        'returns child of individual1 and individual2, using partially mapped crossover O(n)'
         i = random.randrange(0, Individual.size+1)
         j = random.randrange(0,Individual.size+1)
         while j == i:
@@ -87,6 +91,7 @@ class Individual:
         return finalChild
 
     def muteWithSmallProb(self, prob):
+        'performs mutation on an individual with a small probability O(1)'
         rand = random.uniform(0, 1)
         if rand <= prob:
             ij = random.sample(range(0, Individual.size), 2)
@@ -98,6 +103,7 @@ class Individual:
 
 
 class Population:
+    'population class. has a list of individuals'
     size = None
 
     def __init__(self, isEmpty):
@@ -113,6 +119,7 @@ class Population:
         return rep
 
     def pickWithWeights(self):
+        'returns a random individual based on individuals weights (1/fitness) O(populationsize)'
         lst = []
         weights = []
         for ind in self.individuals:
@@ -125,6 +132,7 @@ class Population:
         self.individuals.append(individual)
 
     def bestIndividual(self):
+        'returns an individual with the lowest fitness'
         best = float("inf")
         for individual in self.individuals:
             if individual.fit <= best:
@@ -133,6 +141,7 @@ class Population:
         return bestInd
 
     def overall(self):
+        'returns the average fitness of a population'
         sum = 0
         for ind in self.individuals:
             if ind.fit == float("inf"):
@@ -143,6 +152,7 @@ class Population:
 
 
 def swapElements(i, j, string):
+    'swaps ith and jth position of a string and returns the new string'
     strlist = list(string)
     strlist[i], strlist[j] = strlist[j], strlist[i]
     stringnew = "".join(strlist)
@@ -151,10 +161,11 @@ def swapElements(i, j, string):
 
 def print2dlst(lst):
     for xs in lst:
-        print(" ".join(map(str, xs)))
+        print(" ".join(str(xs)))
 
 
 def geneticAlgorithm(mapp, initialPopulation=None, iterations=100, populationSize=4, muteProb=0.05):
+    'performs genetic algorithm'
     i = 0
     individualSize = len(mapp)
     Population.size = populationSize
@@ -163,13 +174,13 @@ def geneticAlgorithm(mapp, initialPopulation=None, iterations=100, populationSiz
     print("genetic algorithm is executed")
     print("population size = ", populationSize)
     print("individual length/ number of cities = ", individualSize)
-    # print2dlst(mapp)
+    print2dlst(mapp)
     print("--------------------------")
     if initialPopulation is None:
         initialPopulation = Population(False)
     currentPopulation = initialPopulation
     while i < iterations:
-        print("generic algorithm ", str(i+1) + "th iteration" )
+        print("genetic algorithm ", str(i+1) + "th iteration" )
         print("current population : ")
         print(repr(currentPopulation))
         print("--------------------------")
@@ -187,8 +198,8 @@ def geneticAlgorithm(mapp, initialPopulation=None, iterations=100, populationSiz
             newPopulation.addIndividual(child)
         print("next population generated")
         print("--------------------------")
-        if currentPopulation.overall() <= newPopulation.overall():
-            break
+        # if currentPopulation.overall() <= newPopulation.overall():
+        #     break
         currentPopulation = newPopulation
         i += 1
     print("the best individual in the final population = ")
@@ -197,8 +208,8 @@ def geneticAlgorithm(mapp, initialPopulation=None, iterations=100, populationSiz
 
 
 map = [ [ 0, 2, float("inf"), 12, 5 ],
-                      [ 2, 0, 4, 8, float("inf") ],
-                      [ float("inf"), 4, 0, 3, 3 ],
-                      [ 12, 8, 3, 0, 10 ],
-                      [ 5, float("inf"), 3, 10, 0 ] ]
+        [ 2, 0, 4, 8, float("inf") ],
+        [ float("inf"), 4, 0, 3, 3 ],
+        [ 12, 8, 3, 0, 10 ],
+        [ 5, float("inf"), 3, 10, 0 ] ]
 geneticAlgorithm(mapp=map)
